@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GitHub Actions ML Pipeline
+# ─────────────────────────────────────────────────────────────────────────────
+# MODULE 2 KEY TOOL: CI/CD replaces manual "python main.py" execution.
+#
+# This workflow is built in two phases (per the design doc):
+#   Phase 1 (lines 1-40):   Minimal trigger-and-run workflow
+#   Phase 2 (lines 41-end): Extended with validation, training, gates, promotion
+#
+# Triggers:
+#   - Push to main branch
+#   - Pull request to main
+#   - Manual dispatch (workflow_dispatch)
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: ML Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 1 — Minimal: install, lint, run baseline check
+# ═══════════════════════════════════════════════════════════════════════════════
+
+jobs:
+  # ── Unit Tests ──────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests
+        run: pytest tests/ -v --tb=short
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # PHASE 2 — Extended: validate, train, evaluate, gate, promote
+  # ═════════════════════════════════════════════════════════════════════════════
+
+  train-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── Step 1: Data Validation (Pandera) ─────────────────────────────────
+      - name: Validate data with Pandera
+        run: |
+          python -c "
+          from src.data.loader import load_train, load_current
+          from src.data.validate import validate_dataframe
+          train = load_train()
+          current = load_current()
+          validate_dataframe(train, 'train')
+          validate_dataframe(current, 'current')
+          print('Data validation passed')
+          "
+
+      # ── Step 2: Run full pipeline ─────────────────────────────────────────
+      - name: Run ML pipeline
+        run: python main.py
+
+      # ── Step 3: Check deployment gates ────────────────────────────────────
+      - name: Verify model passed gates
+        run: |
+          python -c "
+          import json
+          from pathlib import Path
+          lineage = json.load(open('logs/lineage.json'))
+          metrics = lineage.get('metrics', {})
+          f1 = metrics.get('f1', 0)
+          assert f1 >= 0.55, f'Gate failed: F1={f1:.3f} < 0.55'
+          print(f'Gate check passed: F1={f1:.3f}')
+          "
+
+      # ── Step 4: Upload artefacts ──────────────────────────────────────────
+      - name: Upload model artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-artefacts
+          path: |
+            models/
+            logs/
+            mlruns/
+
+      # ── Step 5: Upload drift report ───────────────────────────────────────
+      - name: Upload drift report
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-report
+          path: logs/drift_report.html
+          if-no-files-found: warn

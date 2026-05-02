@@ -1,0 +1,100 @@
+# DVC Pipeline Definition
+# ========================
+# Defines reproducible stages that DVC can track, cache, and replay.
+#
+# Usage:
+#   dvc repro              — run all stages (skips unchanged)
+#   dvc repro train        — run only training stage and dependencies
+#   dvc dag                — visualize the DAG
+#   dvc metrics show       — show pipeline metrics
+#   dvc diff               — compare metrics between commits
+#   dvc params diff        — compare parameter changes between commits
+
+stages:
+  validate:
+    cmd: >
+      python -c "
+      import sys; sys.path.insert(0, '.');
+      from src.data.loader import load_train, load_current, load_current_stress;
+      from src.data.validate import validate_dataframe;
+      from pathlib import Path;
+      validate_dataframe(load_train(), 'train');
+      validate_dataframe(load_current(), 'current');
+      validate_dataframe(load_current_stress(), 'current_stress');
+      Path('logs').mkdir(exist_ok=True);
+      Path('logs/.validate_ok').write_text('ok\\n');
+      print('Validation passed')
+      "
+    deps:
+      - data/train.csv
+      - data/current.csv
+      - data/current_stress.csv
+      - src/data/validate.py
+    outs:
+      - logs/.validate_ok:
+          cache: false
+
+  features:
+    cmd: >
+      python -c "
+      import sys; sys.path.insert(0, '.');
+      from src.data.loader import load_train;
+      from src.data.validate import validate_dataframe;
+      from src.features.build_features import build_features;
+      df = validate_dataframe(load_train(), 'train');
+      X, names, info = build_features(df, fit=True, save_features_csv=True);
+      print(f'Built {len(names)} features from {len(X)} rows')
+      "
+    deps:
+      - data/train.csv
+      - src/features/build_features.py
+      - logs/.validate_ok
+    outs:
+      - models/feature_pipeline.json:
+          cache: false
+      - data/features_train.csv:
+          cache: true
+
+  train:
+    cmd: python main.py
+    deps:
+      - data/train.csv
+      - data/current.csv
+      - data/current_stress.csv
+      - src/config/config.py
+      - src/models/train.py
+      - src/models/evaluate.py
+      - src/features/build_features.py
+      - src/pipeline/run_pipeline.py
+      - models/feature_pipeline.json
+    metrics:
+      - logs/metrics.json:
+          cache: false
+    plots:
+      - logs/shap_summary.png:
+          cache: false
+      - logs/shap_importance.png:
+          cache: false
+
+  drift:
+    cmd: >
+      python -c "
+      import sys, json; sys.path.insert(0, '.');
+      from src.data.loader import load_train, load_current;
+      from src.data.validate import validate_dataframe;
+      from src.monitoring.drift import detect_drift, print_drift_report;
+      from src.config.config import DRIFT_FEATURES;
+      train_df = validate_dataframe(load_train(), 'train');
+      current_df = validate_dataframe(load_current(), 'current');
+      drift_cols = [c for c in DRIFT_FEATURES if c in train_df.columns and c in current_df.columns];
+      results = detect_drift(train_df[drift_cols], current_df[drift_cols], drift_cols);
+      print_drift_report(results);
+      "
+    deps:
+      - data/train.csv
+      - data/current.csv
+      - src/monitoring/drift.py
+      - models/feature_pipeline.json
+    plots:
+      - logs/drift_report.html:
+          cache: false

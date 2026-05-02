@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+
+# MLflow
+mlruns/
+
+# Models (tracked by DVC or MLflow)
+models/*.pkl
+
+# Logs (generated at runtime)
+logs/
+
+# Data (tracked by DVC)
+data/*.csv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

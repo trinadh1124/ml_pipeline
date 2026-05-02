@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLOps Pipeline Module 2 — Complete Guide</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #5b8dee;
+    --accent2: #3ecf8e;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --code-bg: #0d1117;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 260px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 24px 0;
+    z-index: 100;
+  }
+  .sidebar h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    padding: 0 20px 8px;
+    margin-bottom: 4px;
+  }
+  .sidebar a {
+    display: block;
+    padding: 6px 20px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    color: var(--text);
+    border-left-color: var(--accent);
+    background: var(--surface2);
+  }
+  .sidebar .section-sep { margin: 16px 0 8px; }
+  main {
+    margin-left: 260px;
+    max-width: 900px;
+    padding: 48px 48px 80px;
+  }
+  .hero {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 36px 40px;
+    margin-bottom: 48px;
+  }
+  .hero h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .hero .sub {
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+  .hero p { color: var(--muted); max-width: 680px; margin-bottom: 0; }
+  h2.section {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin: 48px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 80px;
+  }
+  h3.subsection {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 28px 0 10px;
+    scroll-margin-top: 80px;
+  }
+  p { margin-bottom: 12px; color: var(--muted); }
+  p strong { color: var(--text); }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: #e2e8f0;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: 13px; color: #cdd9e5; line-height: 1.65; }
+  .cm { color: #8b949e; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 13.5px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text);
+    text-align: left;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    vertical-align: top;
+  }
+  td strong { color: var(--text); }
+  tr:hover td { background: var(--surface2); }
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+  .callout.warn  { border-left-color: var(--warn); }
+  .callout.green { border-left-color: var(--accent2); }
+  .callout.danger { border-left-color: var(--danger); }
+  .callout p { color: var(--text); margin: 0; }
+  .cost-box { display: flex; gap: 16px; margin-top: 20px; }
+  .cost-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    flex: 1;
+  }
+  .cost-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .cost-card .value { font-size: 22px; font-weight: 700; margin-top: 4px; }
+  .cost-card.danger .value { color: var(--danger); }
+  .cost-card.ok .value { color: var(--accent2); }
+  .stat-row { display: flex; gap: 16px; margin: 20px 0; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    flex: 1;
+  }
+  .stat-card .s-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .stat-card .s-value { font-size: 20px; font-weight: 700; color: var(--text); }
+  .stat-card .s-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .upgrade-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; margin: 20px 0; align-items: center; }
+  .upgrade-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    text-align: center;
+  }
+  .upgrade-card.old { opacity: 0.6; }
+  .upgrade-card.new { border-color: var(--accent2); }
+  .upgrade-arrow { color: var(--accent); font-size: 20px; font-weight: 700; }
+  .stage-grid { display: grid; gap: 10px; margin: 16px 0; }
+  .stage-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .key-stage .stage-card { border-color: var(--accent); }
+  .stage-num {
+    background: var(--surface2);
+    color: var(--accent);
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    white-space: nowrap;
+    margin-top: 2px;
+    border: 1px solid var(--border);
+  }
+  .stage-body { flex: 1; }
+  .stage-title { color: var(--text); font-weight: 600; font-size: 13.5px; margin-bottom: 3px; }
+  .stage-desc { color: var(--muted); font-size: 13px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .badge.green { background: rgba(62,207,142,0.15); color: var(--accent2); }
+  .badge.blue  { background: rgba(91,141,238,0.15); color: var(--accent); }
+  .badge.amber { background: rgba(245,158,11,0.15); color: var(--warn); }
+  .badge.red   { background: rgba(239,68,68,0.15);  color: var(--danger); }
+  .timeline {
+    display: flex;
+    gap: 0;
+    margin: 20px 0;
+  }
+  .tl-item {
+    flex: 1;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .tl-item:first-child { border-radius: 8px 0 0 8px; }
+  .tl-item:last-child { border-radius: 0 8px 8px 0; }
+  .tl-item + .tl-item { border-left: none; }
+  .tl-phase { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px; }
+  .tl-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tl-detail { font-size: 12px; color: var(--muted); }
+  .tl-item.active { border-color: var(--accent); background: rgba(91,141,238,0.06); }
+  .tl-item.active .tl-phase { color: var(--accent); }
+  .tl-item.future { opacity: 0.55; }
+  .strategy-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .strategy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .strategy-name { color: var(--text); font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .strategy-card p { font-size: 12.5px; margin-bottom: 8px; }
+  .strategy-card .when { font-size: 11.5px; color: var(--accent2); font-weight: 600; }
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    main { margin-left: 0; padding: 24px; }
+    .strategy-grid { grid-template-columns: 1fr; }
+    .cost-box, .stat-row { flex-direction: column; }
+    .timeline { flex-direction: column; }
+    .upgrade-grid { grid-template-columns: 1fr; }
+    .upgrade-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <h2>Module 2 Guide</h2>
+  <a href="#problem">Business Problem</a>
+  <a href="#dataset">Dataset</a>
+  <a href="#situation">Pipeline Story</a>
+  <a href="#upgrade">The Upgrade</a>
+  <a href="#quickstart">Quick Start</a>
+  <div class="section-sep"><h2>Steps</h2></div>
+  <a href="#baseline">1 &mdash; baseline.py</a>
+  <a href="#model-selection">2 &mdash; model_selection.py</a>
+  <a href="#main">3 &mdash; main.py</a>
+  <a href="#stages">Pipeline Stages</a>
+  <a href="#retrain">4 &mdash; retrain.py</a>
+  <div class="section-sep"><h2>Monitoring</h2></div>
+  <a href="#monitoring-vs-drift">Monitoring vs Drift</a>
+  <a href="#retrain-strategy">Retraining Strategy</a>
+  <div class="section-sep"><h2>Tools Deep Dive</h2></div>
+  <a href="#mlflow">MLflow</a>
+  <a href="#pandera">Pandera</a>
+  <a href="#dvc">DVC</a>
+  <a href="#evidently">Evidently</a>
+  <a href="#cicd">GitHub Actions</a>
+  <a href="#docker">Docker + FastAPI</a>
+  <a href="#shap">SHAP Interpretability</a>
+  <a href="#optuna">Optuna Tuning</a>
+  <div class="section-sep"><h2>Quality</h2></div>
+  <a href="#testing">Testing Strategy</a>
+  <a href="#dvc-pipeline">DVC Pipeline</a>
+  <div class="section-sep"><h2>Reference</h2></div>
+  <a href="#files">File Reference</a>
+  <a href="#production">Production Mapping</a>
+</nav>
+
+<main>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="sub">upGrad MLOps Module 2 &mdash; From Manual to Production Tools</div>
+    <h1>Telecom Churn Prediction<br>Production MLOps Pipeline</h1>
+    <p>This guide explains the learner-facing production story for the telco churn pipeline: a historical training batch, a stable post-deployment batch for normal monitoring, and a separate stress batch that demonstrates drift detection and retraining with <strong>MLflow, Pandera, DVC, Evidently, GitHub Actions, and Docker</strong>.</p>
+  </div>
+
+  <!-- TL;DR QUICK REFERENCE -->
+  <div id="tldr" style="background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 28px 32px; margin-bottom: 48px;">
+    <h2 style="font-size: 16px; color: var(--accent); margin-bottom: 16px; border: none; padding: 0;">TL;DR &mdash; Quick Reference Card</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+      <div>
+        <p style="color: var(--text); font-weight: 600; margin-bottom: 8px;">Run order</p>
+        <code style="display: block; margin-bottom: 4px;">python baseline.py</code>
+        <code style="display: block; margin-bottom: 4px;">python model_selection.py</code>
+        <code style="display: block; margin-bottom: 4px;">python main.py</code>
+        <code style="display: block; margin-bottom: 4px;">python main.py --batch stress</code>
+        <code style="display: block; margin-bottom: 4px;">uvicorn serve:app --port 8000</code>
+        <code style="display: block; margin-bottom: 4px;">python batch_infer.py</code>
+        <code style="display: block; margin-bottom: 4px;">python batch_infer.py --batch stress</code>
+        <code style="display: block; margin-bottom: 4px;">python retrain.py --dry-run --batch current</code>
+        <code style="display: block;">python retrain.py --dry-run --batch stress</code>
+      </div>
+      <div>
+        <p style="color: var(--text); font-weight: 600; margin-bottom: 8px;">Key numbers</p>
+        <table style="font-size: 12px; margin: 0;">
+          <tr><td style="padding: 3px 8px;">Dataset</td><td style="padding: 3px 8px;"><strong>7,043</strong> customers</td></tr>
+          <tr><td style="padding: 3px 8px;">Train / Current / Stress</td><td style="padding: 3px 8px;">5,300 / 943 / 800</td></tr>
+          <tr><td style="padding: 3px 8px;">Hold-out F1 (0.50)</td><td style="padding: 3px 8px;">0.645</td></tr>
+          <tr><td style="padding: 3px 8px;">Prod threshold</td><td style="padding: 3px 8px;"><strong>0.20</strong></td></tr>
+          <tr><td style="padding: 3px 8px;">Stress batch churn</td><td style="padding: 3px 8px;"><strong>51.2%</strong></td></tr>
+        </table>
+      </div>
+      <div>
+        <p style="color: var(--text); font-weight: 600; margin-bottom: 8px;">Tools used</p>
+        <span class="badge blue">MLflow</span>
+        <span class="badge blue">Pandera</span>
+        <span class="badge blue">DVC</span>
+        <span class="badge green">Evidently</span>
+        <span class="badge green">SHAP</span>
+        <span class="badge amber">Optuna</span>
+        <span class="badge amber">Docker</span>
+        <span class="badge amber">FastAPI</span>
+        <span class="badge red">GitHub Actions</span>
+      </div>
+      <div>
+        <p style="color: var(--text); font-weight: 600; margin-bottom: 8px;">Gates (must pass to deploy)</p>
+        <table style="font-size: 12px; margin: 0;">
+          <tr><td style="padding: 3px 8px;">F1</td><td style="padding: 3px 8px;">&ge; 0.48</td></tr>
+          <tr><td style="padding: 3px 8px;">Recall</td><td style="padding: 3px 8px;">&ge; 0.55</td></tr>
+          <tr><td style="padding: 3px 8px;">AUC-PR</td><td style="padding: 3px 8px;">&ge; 0.40</td></tr>
+          <tr><td style="padding: 3px 8px;">AUC-ROC</td><td style="padding: 3px 8px;">&ge; 0.70</td></tr>
+        </table>
+      </div>
+    </div>
+  <p style="color: var(--muted); font-size: 11px; margin-top: 14px; margin-bottom: 0;">Historical + stable current + stress current &bull; 12-stage pipeline &bull; 3 retraining strategies &bull; DVC reproducible pipeline</p>
+  </div>
+
+  <!-- BUSINESS PROBLEM -->
+  <h2 class="section" id="problem">Problem Statement</h2>
+
+  <h3 class="subsection">Business context</h3>
+  <p>A telecom company is losing customers. The churn rate across the customer base is <strong>26.5%</strong> &mdash; more than one in four customers leaves. Each lost customer costs approximately <strong>$1,500</strong> in new customer acquisition to replace. The business wants to predict which customers are likely to churn so the retention team can intervene with targeted offers.</p>
+
+  <h3 class="subsection">ML problem definition</h3>
+  <table>
+    <tr><th>Dimension</th><th>Definition</th></tr>
+    <tr><td><strong>Task</strong></td><td>Binary classification</td></tr>
+    <tr><td><strong>Input</strong></td><td>One row per customer &mdash; 20 features: demographics, services, contract, billing</td></tr>
+    <tr><td><strong>Output</strong></td><td><code>churn = 1</code> (will leave) or <code>churn = 0</code> (will stay), plus probability</td></tr>
+    <tr><td><strong>Target variable</strong></td><td><code>churn</code> &mdash; binary. Positive class = customer churned</td></tr>
+      <tr><td><strong>Class distribution</strong></td><td>~23.4% churn in the historical batch, ~23.3% churn in the stable current batch, and a deliberately shifted 51.2% churn in the stress batch</td></tr>
+    <tr><td><strong>Primary metric</strong></td><td>F1 on the minority class (churners) in the historical hold-out set</td></tr>
+  </table>
+
+  <!-- DATASET -->
+  <h2 class="section" id="dataset">Dataset</h2>
+  <p><strong>IBM Telco Customer Churn</strong> &mdash; 7,043 telecom customers with demographics, service subscriptions, contract details, billing info, and churn status.</p>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="s-label">Total Customers</div>
+      <div class="s-value">7,043</div>
+      <div class="s-sub">IBM Telco dataset from Kaggle</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">Features</div>
+      <div class="s-value">20</div>
+      <div class="s-sub">Demographics, services, billing, contract</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">Churn Rate</div>
+      <div class="s-value">26.5%</div>
+      <div class="s-sub">Class imbalance &mdash; majority stays</div>
+    </div>
+    <div class="stat-card">
+      <div class="s-label">Production Split</div>
+      <div class="s-value">Batch-Based</div>
+      <div class="s-sub">historical train + stable current + stress current</div>
+    </div>
+  </div>
+
+  <!-- THE SITUATION -->
+  <h2 class="section" id="situation">Pipeline Story</h2>
+  <p>This pipeline teaches two monitoring outcomes clearly. First, a normal post-deployment batch behaves like the historical baseline, so monitoring stays calm. Second, a separate stress batch is intentionally shifted toward high-risk customer segments, so drift is easy to detect and retraining has a believable reason.</p>
+
+  <div class="timeline">
+    <div class="tl-item active">
+      <div class="tl-phase">Phase 1 &mdash; Training</div>
+      <div class="tl-label">Historical Batch</div>
+        <div class="tl-detail">5,300 customers. Churn rate: 23.4%. This is the data available at deployment time and used for train/hold-out evaluation.</div>
+    </div>
+    <div class="tl-item active" style="border-color: var(--accent2);">
+      <div class="tl-phase" style="color: var(--accent2);">Phase 2 &mdash; Stable Monitoring</div>
+      <div class="tl-label">Current Batch</div>
+        <div class="tl-detail">943 customers. Churn rate: 23.3%. Used to show a normal post-deployment batch where no retraining is needed.</div>
+    </div>
+    <div class="tl-item active" style="border-color: var(--warn); background: rgba(245,158,11,0.06);">
+      <div class="tl-phase" style="color: var(--warn);">Phase 3 &mdash; Stress Monitoring</div>
+      <div class="tl-label">Current Stress Batch</div>
+        <div class="tl-detail">800 customers. Churn rate: 51.2%. Built from high-risk natural segments so drift is visible and retraining is recommended.</div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>What makes the stress batch realistic?</strong> It uses existing columns only: <code>contract</code>, <code>internet_service</code>, <code>payment_method</code>, and optionally short <code>tenure_months</code>. No fake columns are invented. The batch is simply enriched for naturally high-risk customers.</p>
+  </div>
+
+  <!-- COST MODEL -->
+  <h2 class="section" id="cost-model">Business Cost Model</h2>
+  <div class="cost-box">
+    <div class="cost-card danger">
+      <div class="label">Lost Customer (False Negative)</div>
+      <div class="value">$1,500</div>
+    </div>
+    <div class="cost-card ok">
+      <div class="label">Wasted Retention Offer (False Positive)</div>
+      <div class="value">$50</div>
+    </div>
+    <div class="cost-card">
+      <div class="label">Cost Ratio FN : FP</div>
+      <div class="value" style="color: var(--warn)">30 : 1</div>
+    </div>
+  </div>
+
+  <!-- THE UPGRADE -->
+  <h2 class="section" id="upgrade">The Upgrade: Module 1 &rarr; Module 2</h2>
+  <p>Every hand-built component from Module 1 is replaced with its production counterpart.</p>
+
+  <table>
+    <tr><th>Module 1 (from scratch)</th><th>Module 2 (production tool)</th><th>Why</th></tr>
+    <tr><td><code>experiments.csv</code></td><td><strong>MLflow</strong> tracking</td><td>UI, comparison, artefact storage, API access</td></tr>
+    <tr><td><code>registry.json</code></td><td><strong>MLflow Model Registry</strong></td><td>Versioning, stage transitions, programmatic loading</td></tr>
+    <tr><td>Manual <code>if</code> checks</td><td><strong>Pandera</strong> schemas</td><td>Declarative, reusable, auto-coercing, testable</td></tr>
+    <tr><td>No data versioning</td><td><strong>DVC</strong></td><td>Git-like versioning for data, reproducible experiments</td></tr>
+    <tr><td>Manual mean/std drift</td><td><strong>Evidently</strong></td><td>Statistical tests, HTML reports, programmatic API</td></tr>
+    <tr><td><code>python main.py</code></td><td><strong>GitHub Actions</strong></td><td>Automated triggers, gates, testing, deployment</td></tr>
+    <tr><td><code>serve.py</code> only</td><td><strong>Docker + FastAPI</strong></td><td>Reproducible, portable, container orchestrator ready</td></tr>
+    <tr><td><code>feature_importances_</code></td><td><strong>SHAP</strong></td><td>Per-prediction explanations, stakeholder-ready</td></tr>
+    <tr><td>Fixed hyperparameters</td><td><strong>Optuna</strong></td><td>Bayesian search, efficient, adaptive</td></tr>
+    <tr><td>No tests</td><td><strong>pytest</strong> (28 tests)</td><td>Unit + integration, CI-enforced quality</td></tr>
+  </table>
+
+  <!-- QUICK START -->
+  <h2 class="section" id="quickstart">Quick Start</h2>
+  <pre><code><span class="cm"># Create and activate virtual environment</span>
+python -m venv venv
+venv\Scripts\activate        <span class="cm"># Windows</span>
+source venv/bin/activate     <span class="cm"># Linux/Mac</span>
+
+<span class="cm"># Install dependencies</span>
+pip install -r requirements.txt
+
+<span class="cm"># Initial deployment flow</span>
+python baseline.py           <span class="cm"># See what goes wrong without MLOps</span>
+python model_selection.py    <span class="cm"># Rigorous model comparison (MLflow logged)</span>
+python main.py               <span class="cm"># Full 12-stage production pipeline</span>
+python main.py --batch stress <span class="cm"># Same pipeline, but monitor the stress batch</span>
+uvicorn serve:app --reload --port 8000   <span class="cm"># REST API &mdash; open /docs</span>
+python batch_infer.py                    <span class="cm"># batch scoring with saved production threshold</span>
+python batch_infer.py --batch stress     <span class="cm"># score the shifted post-deployment batch</span>
+
+<span class="cm"># Post-deployment monitoring story</span>
+python retrain.py --dry-run --batch current   <span class="cm"># stable batch: monitor only</span>
+python retrain.py --dry-run --batch stress    <span class="cm"># stress batch: retraining recommended</span>
+python retrain.py --strategy mixed --batch stress  <span class="cm"># recommended response</span>
+
+<span class="cm"># View MLflow UI</span>
+mlflow ui --backend-store-uri file:///path/to/mlruns
+
+<span class="cm"># View Evidently drift reports</span>
+<span class="cm"># Open logs/drift_report_current.html or logs/drift_report_stress.html</span></code></pre>
+
+  <!-- BASELINE -->
+  <h2 class="section" id="baseline">Step 1 &mdash; baseline.py</h2>
+  <p>A junior analyst builds a quick churn model. Same 7 pitfalls as Module 1:</p>
+  <table>
+    <tr><th>#</th><th>Pitfall</th><th>What goes wrong</th></tr>
+    <tr><td>1</td><td>Hardcoded paths</td><td>Breaks on any machine except the author's</td></tr>
+    <tr><td>2</td><td>LabelEncoder on nominal categories</td><td>Contract type treated as ordinal &mdash; false signal</td></tr>
+    <tr><td>3</td><td>No historical/current split</td><td>Incoming production patterns get mixed into pre-deployment evaluation</td></tr>
+    <tr><td>4</td><td>Optimised for accuracy</td><td>81% accuracy; misses 44% of churners ($261K at risk)</td></tr>
+    <tr><td>5</td><td>No feature pipeline saved</td><td>Inference crashes on unseen categories</td></tr>
+    <tr><td>6</td><td>No experiment tracking</td><td>Cannot reproduce or compare runs</td></tr>
+    <tr><td>7</td><td>No drift monitoring</td><td>Model degrades silently on new customer segments</td></tr>
+  </table>
+
+  <!-- MODEL SELECTION -->
+  <h2 class="section" id="model-selection">Step 2 &mdash; model_selection.py</h2>
+  <p>Four models are compared on the same split, same metric, and same imbalance-aware setup. The top candidates are then tuned with Optuna, and the winner is promoted into the production pipeline automatically.</p>
+  <table>
+    <tr><th>Model</th><th>F1 (churners)</th><th>Recall</th><th>Missed</th><th>Cost</th></tr>
+    <tr><td>Logistic Regression</td><td>competitive baseline</td><td>high recall</td><td>-</td><td>-</td></tr>
+    <tr><td><strong>XGBoost (tuned production winner)</strong></td><td><strong>0.645</strong></td><td><strong>0.717</strong></td><td><strong>90</strong></td><td><strong>$143,050 at threshold 0.50</strong></td></tr>
+    <tr><td>LightGBM</td><td>strong runner-up</td><td>balanced</td><td>-</td><td>-</td></tr>
+    <tr><td>Random Forest</td><td>lower</td><td>lower</td><td>-</td><td>-</td></tr>
+  </table>
+  <p>The production pipeline uses the model selected by the comparison-and-tuning workflow, so the same winning configuration is carried into training, serving, batch scoring, and model registration.</p>
+
+  <!-- MAIN PIPELINE -->
+  <h2 class="section" id="main">Step 3 &mdash; main.py (12-Stage Pipeline)</h2>
+
+  <h2 class="section" id="stages">Pipeline Stages</h2>
+  <div class="stage-grid">
+    <div class="stage-card">
+      <div class="stage-num">Stage 0</div>
+      <div class="stage-body">
+        <div class="stage-title">Initialisation</div>
+        <div class="stage-desc">Set seed (42), create directories, configure <strong>MLflow</strong> tracking URI and experiment.</div>
+      </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 1</div>
+      <div class="stage-body">
+        <div class="stage-title">Data Loading</div>
+        <div class="stage-desc">Load <code>data/train.csv</code> (5,300 historical), <code>data/current.csv</code> (943 stable current), and <code>data/current_stress.csv</code> (800 stress current). All are tracked by <strong>DVC</strong>.</div>
+      </div>
+    </div>
+    <div class="key-stage">
+    <div class="stage-card">
+      <div class="stage-num">Stage 2</div>
+      <div class="stage-body">
+        <div class="stage-title">Data Validation (<span class="badge blue">Pandera</span>)</div>
+        <div class="stage-desc">Declarative schema validates types, ranges, categorical domains, and nullable columns. Replaces Module 1's manual <code>if</code>-<code>else</code> checks.</div>
+      </div>
+    </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 3</div>
+      <div class="stage-body">
+        <div class="stage-title">Feature Engineering</div>
+        <div class="stage-desc">One-hot encodes nominals (contract, internet service, payment method). Fits imputations on the training fold only, then saves the pipeline to <code>feature_pipeline.json</code> so hold-out and serving use the same transformation without leakage.</div>
+      </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 4</div>
+      <div class="stage-body">
+        <div class="stage-title">Train/Test Split</div>
+        <div class="stage-desc">80/20 stratified split of the historical batch only. Hold-out 20% for pre-deployment validation.</div>
+      </div>
+    </div>
+    <div class="key-stage">
+    <div class="stage-card">
+      <div class="stage-num">Stage 5</div>
+      <div class="stage-body">
+        <div class="stage-title">Model Training (<span class="badge blue">MLflow</span> tracked)</div>
+        <div class="stage-desc">Train the tuned production estimator selected by <code>model_selection.py</code>. In the current project that winner is XGBoost, and its parameters plus model artefact are logged to MLflow automatically.</div>
+      </div>
+    </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 6</div>
+      <div class="stage-body">
+        <div class="stage-title">Pre-Deployment Evaluation</div>
+        <div class="stage-desc">Reports both the default threshold (0.50) and the deployment threshold chosen from the business cost model with a precision guardrail. Slice analysis by contract type reveals performance gaps.</div>
+      </div>
+    </div>
+    <div class="key-stage">
+    <div class="stage-card">
+      <div class="stage-num">Stage 7</div>
+      <div class="stage-body">
+        <div class="stage-title">Deployment Gates</div>
+        <div class="stage-desc">Hard thresholds: F1 &ge; 0.48, Recall &ge; 0.55, AUC-PR &ge; 0.40, AUC-ROC &ge; 0.70. If any gate fails, pipeline stops.</div>
+      </div>
+    </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 8</div>
+      <div class="stage-body">
+        <div class="stage-title">MLflow Model Logging</div>
+        <div class="stage-desc">Model artefact with inferred signature logged. Feature pipeline JSON also logged as artefact.</div>
+      </div>
+    </div>
+    <div class="key-stage">
+    <div class="stage-card">
+      <div class="stage-num">Stage 9</div>
+      <div class="stage-body">
+        <div class="stage-title">Model Registry (<span class="badge blue">MLflow</span>)</div>
+        <div class="stage-desc">Registered as <code>telco-churn-production</code>. Promoted: None &rarr; Staging &rarr; Production. Previous versions auto-archived.</div>
+      </div>
+    </div>
+    </div>
+    <div class="key-stage">
+    <div class="stage-card">
+      <div class="stage-num">Stage 10</div>
+      <div class="stage-body">
+        <div class="stage-title">Drift Detection (<span class="badge green">Evidently</span>)</div>
+        <div class="stage-desc">Compares the historical batch to whichever post-deployment batch you choose. Stable monitoring writes <code>logs/drift_report_current.html</code>; stress monitoring writes <code>logs/drift_report_stress.html</code>.</div>
+      </div>
+    </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 11</div>
+      <div class="stage-body">
+        <div class="stage-title">Batch Scoring</div>
+        <div class="stage-desc">Scores either the stable current batch or the stress batch with the saved production threshold. This lets learners compare a normal monitoring outcome versus a retraining-trigger outcome using the same deployed model.</div>
+      </div>
+    </div>
+    <div class="stage-card">
+      <div class="stage-num">Stage 12</div>
+      <div class="stage-body">
+        <div class="stage-title">Lineage Recording</div>
+        <div class="stage-desc">Full provenance: data checksums, model version, MLflow run ID, Python version, git commit.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RETRAIN -->
+  <h2 class="section" id="retrain">Step 4 &mdash; retrain.py</h2>
+  <p><code>retrain.py</code> now supports two learner-friendly monitoring outcomes. Use <code>--batch current</code> to show a stable post-deployment batch where the answer is "keep monitoring". Use <code>--batch stress</code> to show the shifted batch where retraining is recommended.</p>
+  <div class="strategy-grid">
+    <div class="strategy-card">
+      <div class="strategy-name">finetune</div>
+      <p>Warm-start: add 150 trees on new-customer data only.</p>
+      <div class="when">Best for: mild drift, tight budget</div>
+    </div>
+    <div class="strategy-card" style="border-color: var(--accent2);">
+      <div class="strategy-name" style="color: var(--accent2);">mixed (recommended)</div>
+      <p>Pool 50% historical + 100% new data. Fresh model.</p>
+      <div class="when">Best for: demographic shift &mdash; must work on both cohorts</div>
+    </div>
+    <div class="strategy-card">
+      <div class="strategy-name">reexperiment</div>
+      <p>Full hyperparameter search on combined data.</p>
+      <div class="when">Best for: severe degradation &mdash; old params may be stale</div>
+    </div>
+  </div>
+
+  <!-- MONITORING VS DRIFT -->
+  <h2 class="section" id="monitoring-vs-drift">Model Performance Monitoring vs Data Drift</h2>
+  <p>These are <strong>two different checks</strong> learners should keep separate. In this project, the stable current batch shows how monitoring can stay calm, while the stress batch shows how drift can trigger action.</p>
+
+  <table>
+    <tr><th>Concept</th><th>Data Drift</th><th>Performance Monitoring</th></tr>
+    <tr><td><strong>What it detects</strong></td><td>Input feature distributions changed</td><td>Model outputs are wrong</td></tr>
+    <tr><td><strong>Requires labels?</strong></td><td>No &mdash; compares feature distributions only</td><td>Yes &mdash; needs ground truth (actual churn)</td></tr>
+    <tr><td><strong>When to check</strong></td><td>Immediately on new data arrival</td><td>After ground truth labels become available</td></tr>
+    <tr><td><strong>Example</strong></td><td><code>current_stress.csv</code> shifts toward month-to-month, fiber optic, electronic-check, short-tenure customers</td><td>The deployed model performs differently once labels are available</td></tr>
+    <tr><td><strong>Tool in Module 2</strong></td><td>Evidently DataDriftPreset</td><td>MLflow metric logging + deployment gates</td></tr>
+  </table>
+
+  <div class="callout">
+    <p><strong>Why both are needed:</strong> Data drift tells you the model <em>might</em> be facing a new situation. Performance monitoring tells you whether that new situation is actually hurting outcomes once labels arrive. In the guide, <code>current.csv</code> demonstrates "monitor only" and <code>current_stress.csv</code> demonstrates "retraining recommended".</p>
+  </div>
+
+  <h3 class="subsection">The monitoring loop when ground truth is delayed</h3>
+  <p>In telecom churn, a customer may take 30-90 days to actually churn after the model predicts they will. During this delay:</p>
+  <ul style="color: var(--muted); padding-left: 20px; margin-bottom: 16px; font-size: 14px;">
+    <li style="margin-bottom: 6px;"><strong style="color: var(--text);">Day 0:</strong> Model scores either <code>current.csv</code> or <code>current_stress.csv</code></li>
+    <li style="margin-bottom: 6px;"><strong style="color: var(--text);">Day 0:</strong> Evidently drift report checks whether the selected batch has shifted</li>
+    <li style="margin-bottom: 6px;"><strong style="color: var(--text);">Day 30-90:</strong> Ground truth labels arrive (customer actually churned or stayed)</li>
+    <li style="margin-bottom: 6px;"><strong style="color: var(--text);">Day 30-90:</strong> F1/Recall/Precision computed against ground truth &mdash; confirms degradation</li>
+    <li><strong style="color: var(--text);">Decision:</strong> Retrain based on drift (proactive) or degradation (reactive)?</li>
+  </ul>
+
+  <!-- RETRAINING STRATEGY -->
+  <h2 class="section" id="retrain-strategy">When and How to Retrain</h2>
+  <p>Three retraining strategies, each with different trade-offs in cost, risk, and complexity:</p>
+
+  <table>
+    <tr><th>Strategy</th><th>How it works</th><th>Cost</th><th>Risk</th><th>When to use</th></tr>
+    <tr>
+      <td><strong>Scheduled</strong></td>
+      <td>Retrain on a fixed cadence (weekly, monthly)</td>
+      <td style="color: var(--warn);">Medium &mdash; runs even when not needed</td>
+      <td style="color: var(--accent2);">Low &mdash; model stays fresh</td>
+      <td>Stable environments with gradual drift</td>
+    </tr>
+    <tr>
+      <td><strong>Triggered</strong></td>
+      <td>Retrain only when drift or degradation is detected</td>
+      <td style="color: var(--accent2);">Low &mdash; runs only when needed</td>
+      <td style="color: var(--warn);">Medium &mdash; depends on detection quality</td>
+      <td>Environments with sudden shifts (our telecom case)</td>
+    </tr>
+    <tr>
+      <td><strong>Continuous</strong></td>
+      <td>Online learning &mdash; model updates on every new batch</td>
+      <td style="color: var(--danger);">High &mdash; always running</td>
+      <td style="color: var(--danger);">High &mdash; can chase noise</td>
+      <td>High-frequency data, streaming scenarios</td>
+    </tr>
+  </table>
+
+  <div class="callout green">
+    <p><strong>Our pipeline uses triggered retraining.</strong> The intended learner story is simple: the stable batch should not retrain, the stress batch should retrain, and <code>mixed</code> is the recommended response because it keeps the historical baseline while adapting to the shifted segment.</p>
+  </div>
+  <div class="callout">
+    <p><strong>Threshold note for retraining:</strong> the project now keeps one fixed learner-facing threshold of <code>0.20</code> across hold-out evaluation, batch scoring, and retraining. This makes the deployment story easier to follow.</p>
+  </div>
+
+  <h3 class="subsection">Current production thresholding results</h3>
+  <p>The latest pipeline evaluates the tuned production model on the historical hold-out set, then applies the same fixed <code>0.20</code> threshold to whichever post-deployment batch is being monitored.</p>
+  <table>
+    <tr><th>Batch</th><th>Rows</th><th>Churn Rate</th><th>Expected learning outcome</th></tr>
+    <tr><td><code>train.csv</code></td><td>5,300</td><td>23.4%</td><td>Historical baseline used for training and hold-out validation</td></tr>
+    <tr><td><code>current.csv</code></td><td>943</td><td>23.3%</td><td>Stable post-deployment monitoring batch; no retrain recommended</td></tr>
+    <tr><td><code>current_stress.csv</code></td><td>800</td><td>51.2%</td><td>Shifted batch; drift detected and retraining recommended</td></tr>
+  </table>
+  <div class="callout green">
+    <p><strong>The key teaching improvement is the split design.</strong> Learners can now see both outcomes clearly: one monitored batch that stays stable and one monitored batch that justifies retraining, without inventing fake features or unrealistic columns.</p>
+  </div>
+  <div class="callout">
+    <p><strong>Stress monitoring guardrail:</strong> <code>main.py --batch stress</code> is monitor-only. It scores the shifted batch and generates drift evidence, but it does not replace the stable production model. Promotion happens only through retraining if the new candidate passes gates.</p>
+  </div>
+
+  <!-- TOOLS DEEP DIVE -->
+  <h2 class="section" id="mlflow">MLflow &mdash; Experiment Tracking &amp; Model Registry</h2>
+  <p>MLflow replaces two Module 1 components at once: the CSV experiment log and the JSON model registry.</p>
+  <pre><code><span class="cm"># What Module 1 did:</span>
+with open("logs/experiments.csv", "a") as f:
+    f.write(f"{timestamp},{params},{metrics}\n")
+
+<span class="cm"># What Module 2 does:</span>
+import mlflow
+mlflow.log_params({"n_estimators": 500, "lr": 0.05})
+mlflow.log_metrics({"f1": 0.52, "recall": 0.62})
+mlflow.sklearn.log_model(model, "model")
+
+<span class="cm"># Registry:</span>
+mlflow.register_model(f"runs:/{run_id}/model", "telco-churn-production")
+<span class="cm"># Promote: tag version as "staging" then "production"</span></code></pre>
+  <p>View results: <code>mlflow ui --backend-store-uri file:///path/to/mlruns</code></p>
+
+  <h2 class="section" id="pandera">Pandera &mdash; Data Validation</h2>
+  <p>Pandera replaces Module 1's manual schema checks with a declarative schema.</p>
+  <pre><code><span class="cm"># What Module 1 did:</span>
+if df.isnull().sum().sum() > threshold:
+    raise ValueError("Too many nulls")
+if not set(df.columns) >= expected_cols:
+    raise ValueError("Missing columns")
+
+<span class="cm"># What Module 2 does:</span>
+import pandera as pa
+schema = pa.DataFrameSchema({
+    "tenure_months": pa.Column(int, pa.Check.in_range(0, 72)),
+    "contract":      pa.Column(str, pa.Check.isin([
+        "Month-to-month", "One year", "Two year"
+    ])),
+    "monthly_charges": pa.Column(float, pa.Check.in_range(0, 200)),
+})
+validated_df = schema.validate(df)  <span class="cm"># raises on failure</span></code></pre>
+
+  <h2 class="section" id="dvc">DVC &mdash; Data Versioning</h2>
+  <p>DVC tracks dataset versions alongside code in Git. When you change the training data, DVC records the new version.</p>
+  <pre><code><span class="cm"># Initialise</span>
+dvc init
+dvc remote add -d local_remote ./dvc_remote
+
+<span class="cm"># Track data files</span>
+dvc add data/train.csv data/current.csv data/current_stress.csv
+git add data/train.csv.dvc data/current.csv.dvc data/current_stress.csv.dvc
+
+<span class="cm"># Push data to remote</span>
+dvc push
+
+<span class="cm"># Tag a pipeline version</span>
+git tag -a v1.0 -m "Initial model training"
+
+<span class="cm"># Restore any previous data version</span>
+git checkout v1.0 -- data/train.csv.dvc
+dvc checkout</code></pre>
+  <div class="callout">
+  </div>
+
+  <h2 class="section" id="evidently">Evidently &mdash; Drift Detection</h2>
+  <p>Evidently replaces Module 1's manual mean/std comparison with proper statistical tests.</p>
+  <pre><code><span class="cm"># What Module 1 did:</span>
+shift = abs(train_mean - current_mean) / train_mean
+if shift > 0.10:
+    print(f"DRIFT: {feature} shifted {shift:.1%}")
+
+<span class="cm"># What Module 2 does:</span>
+from evidently.legacy.report import Report
+from evidently.legacy.metric_preset import DataDriftPreset
+
+report = Report(metrics=[DataDriftPreset()])
+report.run(reference_data=train_df, current_data=current_df)
+report.save_html("logs/drift_report_current.html")
+<span class="cm"># Save a separate report for the stress batch when needed</span></code></pre>
+
+  <h2 class="section" id="cicd">GitHub Actions &mdash; CI/CD</h2>
+  <p>The workflow in <code>.github/workflows/ml_pipeline.yml</code> is built in two phases:</p>
+  <table>
+    <tr><th>Phase</th><th>What it does</th></tr>
+    <tr><td><strong>Phase 1</strong> (on every PR)</td><td>Install dependencies, run <code>pytest tests/</code> &mdash; unit tests for validation and features</td></tr>
+    <tr><td><strong>Phase 2</strong> (on push to main)</td><td>Validate data with Pandera, run full pipeline, check deployment gates, upload model artefacts and drift report</td></tr>
+  </table>
+
+  <h2 class="section" id="docker">Docker + FastAPI &mdash; Containerised Serving</h2>
+  <pre><code><span class="cm"># Build the container</span>
+docker build -t telco-churn-api .
+
+<span class="cm"># Run it</span>
+docker run -p 8000:8000 telco-churn-api
+
+<span class="cm"># Test</span>
+curl http://localhost:8000/health
+curl -X POST http://localhost:8000/predict \
+  -H "Content-Type: application/json" \
+  -d '{"gender":"Male","senior_citizen":"No",...}'</code></pre>
+  <p>The model is loaded from the MLflow registry at startup. Swap model versions by promoting a new version to production and restarting the container. No code changes needed.</p>
+
+  <!-- SHAP -->
+  <h2 class="section" id="shap">SHAP &mdash; Model Interpretability</h2>
+  <p>XGBoost feature importance tells you <em>which</em> features the model uses most. SHAP answers the harder question: <strong>"Why was this specific customer flagged as a churner?"</strong></p>
+
+  <div class="upgrade-grid">
+    <div class="upgrade-card old">
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Module 1</div>
+      <div style="font-size: 14px; margin-top: 4px;"><code>model.feature_importances_</code></div>
+      <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Global ranking only &mdash; no per-customer insight</div>
+    </div>
+    <div class="upgrade-arrow">&rarr;</div>
+    <div class="upgrade-card new">
+      <div style="font-size: 11px; color: var(--accent2); text-transform: uppercase;">Module 2</div>
+      <div style="font-size: 14px; margin-top: 4px;"><code>shap.TreeExplainer</code></div>
+      <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Per-prediction explanations &mdash; exact, not approximate</div>
+    </div>
+  </div>
+
+  <pre><code><span class="cm"># Global explanation — which features matter most?</span>
+from src.models.explain import explain_model
+explain_model(model, X_test, feature_names, save_dir="logs")
+<span class="cm"># Saves: logs/shap_summary.png, logs/shap_importance.png</span>
+
+<span class="cm"># Single customer — "why was this person flagged?"</span>
+from src.models.explain import explain_single_customer
+result = explain_single_customer(model, customer_row, feature_names)
+<span class="cm"># Returns: top features pushing toward/away from churn</span></code></pre>
+
+  <div class="callout green">
+    <p><strong>Business value:</strong> The retention team no longer gets a bare 0/1 prediction. They get: "This customer is likely to churn because their <em>contract is month-to-month</em> (+0.18 toward churn) and <em>tenure is only 3 months</em> (+0.12), despite having <em>tech support</em> (-0.05 away from churn)." Actionable, not opaque.</p>
+  </div>
+
+  <!-- OPTUNA -->
+  <h2 class="section" id="optuna">Optuna &mdash; Hyperparameter Tuning</h2>
+  <p>Module 1 used fixed hyperparameters. The <code>reexperiment</code> strategy in <code>retrain.py</code> searched a crude 4-config grid. Now <strong>Optuna</strong> runs Bayesian optimization &mdash; learning from previous trials to focus on promising regions of the search space for the top candidates from model selection.</p>
+
+<pre><code><span class="cm"># In model_selection.py — tune the top candidates, then persist the winner</span>
+from src.models.tuning import tune_model
+
+best_params, best_f1 = tune_model(
+    model_name="XGBoost",
+    X_train=X_train, y_train=y_train,
+    n_trials=50,    <span class="cm"># 50 Bayesian trials</span>
+)
+<span class="cm"># Searches model-specific spaces and writes models/best_params.json</span>
+<span class="cm"># main.py then reads that file and deploys the selected config</span></code></pre>
+
+  <table>
+    <tr><th>Approach</th><th>Trials</th><th>Intelligence</th><th>When to use</th></tr>
+    <tr><td>Grid search</td><td>All combos</td><td>None &mdash; brute force</td><td>Tiny search spaces (&lt;50 combos)</td></tr>
+    <tr><td>Random search</td><td>Random sample</td><td>Uniform sampling</td><td>First pass exploration</td></tr>
+    <tr><td><strong>Optuna (TPE)</strong></td><td>Bayesian</td><td><strong>Learns from prior trials</strong></td><td>Production tuning &mdash; efficient and adaptive</td></tr>
+  </table>
+
+  <div class="callout">
+    <p><strong>Why 50 trials, not 300?</strong> TPE (Tree-structured Parzen Estimator) converges fast. On this dataset size, 50 trials gives a strong trade-off between quality and runtime. More trials yield diminishing returns.</p>
+  </div>
+
+  <!-- TESTING -->
+  <h2 class="section" id="testing">Testing Strategy</h2>
+  <p>Module 1 had <strong>zero tests</strong>. Module 2 has <strong>29 tests</strong> across 5 test modules, covering all four test types from the design doc:</p>
+
+  <table>
+    <tr><th>Test type</th><th>Module</th><th>Tests</th><th>What it validates</th></tr>
+    <tr><td><strong>Unit tests</strong></td><td><code>test_validate.py</code></td><td>6</td><td>Pandera schema: valid rows pass, invalid rows fail</td></tr>
+    <tr><td><strong>Unit tests</strong></td><td><code>test_features.py</code></td><td>4</td><td>Feature engineering: output shape, no target leak, binary encoding</td></tr>
+    <tr><td><strong>Unit tests</strong></td><td><code>test_train.py</code></td><td>5</td><td>Model training: returns LGBMClassifier, predictions in [0,1], custom params</td></tr>
+    <tr><td><strong>Unit tests</strong></td><td><code>test_evaluate.py</code></td><td>7</td><td>Evaluation: perfect/wrong predictions, cost model, gate pass/fail logic</td></tr>
+    <tr><td><strong>Integration</strong></td><td><code>test_pipeline_e2e.py</code></td><td>7</td><td>Full pipeline: feature round-trip, train&rarr;eval&rarr;gates, drift detection, MLflow logging, lineage</td></tr>
+  </table>
+
+  <pre><code><span class="cm"># Run all tests</span>
+pytest tests/ -v
+
+<span class="cm"># Run only integration tests</span>
+pytest tests/test_pipeline_e2e.py -v
+
+<span class="cm"># Run with coverage</span>
+pytest tests/ -v --tb=short</code></pre>
+
+  <div class="callout warn">
+    <p><strong>Why no tests in Module 1?</strong> Module 1 built everything from scratch to teach the concepts. Testing was deferred to Module 2 where <code>pytest</code> is part of the production toolchain. This mirrors real teams: prototype first, test when productionising.</p>
+  </div>
+
+  <!-- DVC PIPELINE -->
+  <h2 class="section" id="dvc-pipeline">DVC Pipeline &mdash; Reproducible Stages</h2>
+  <p>Beyond <code>dvc add</code> (data tracking), DVC also defines <strong>reproducible pipeline stages</strong> via <code>dvc.yaml</code>. Each stage declares its inputs (deps), outputs (outs), and command. DVC caches results and skips unchanged stages.</p>
+
+  <pre><code><span class="cm"># dvc.yaml defines 4 stages:</span>
+<span class="cm">#   validate → features → train → drift</span>
+
+<span class="cm"># Run the full pipeline (skips unchanged stages)</span>
+dvc repro
+
+<span class="cm"># Run only up to training</span>
+dvc repro train
+
+<span class="cm"># View the DAG</span>
+dvc dag
+<span class="cm"># Output:</span>
+<span class="cm">#   validate → features → train → drift</span>
+
+<span class="cm"># Compare metrics between commits</span>
+dvc metrics show
+dvc metrics diff
+
+<span class="cm"># Compare parameter changes</span>
+dvc params diff</code></pre>
+
+  <table>
+    <tr><th>Stage</th><th>Dependencies</th><th>Outputs</th><th>What it does</th></tr>
+    <tr><td><code>validate</code></td><td>data/*.csv, validate.py</td><td>logs/.validate_ok</td><td>Pandera schema validation on both datasets</td></tr>
+    <tr><td><code>features</code></td><td>train.csv, build_features.py</td><td>feature_pipeline.json</td><td>Build and save feature pipeline</td></tr>
+    <tr><td><code>train</code></td><td>All source modules</td><td>logs/metrics.json, SHAP plots</td><td>Full 12-stage pipeline with metric export</td></tr>
+    <tr><td><code>drift</code></td><td>data/*.csv, drift.py</td><td>drift_report_current.html / drift_report_stress.html</td><td>Evidently statistical drift detection for the selected monitoring batch</td></tr>
+  </table>
+
+  <div class="callout green">
+    <p><strong>Why this matters:</strong> <code>dvc repro</code> guarantees that anyone on the team gets the same results from the same data + code. Change the training data? DVC reruns <code>features → train → drift</code>. Change only drift.py? Only <code>drift</code> reruns. This is the foundation for reproducible ML experiments.</p>
+  </div>
+
+  <!-- FILE REFERENCE -->
+  <h2 class="section" id="files">File Reference</h2>
+  <table>
+    <tr><th>File</th><th>What it does</th><th>Tool</th></tr>
+    <tr><td><code>baseline.py</code></td><td>Naive approach &mdash; 7 pitfalls</td><td>&mdash;</td></tr>
+    <tr><td><code>model_selection.py</code></td><td>4-model comparison, all logged to MLflow</td><td>MLflow</td></tr>
+    <tr><td><code>main.py</code></td><td>Full 12-stage pipeline</td><td>All tools</td></tr>
+    <tr><td><code>retrain.py</code></td><td>Drift-triggered retraining (3 strategies)</td><td>Evidently, MLflow</td></tr>
+    <tr><td><code>serve.py</code></td><td>FastAPI REST endpoint</td><td>FastAPI</td></tr>
+    <tr><td><code>batch_infer.py</code></td><td>Batch scorer</td><td>MLflow</td></tr>
+    <tr><td><code>Dockerfile</code></td><td>Container definition</td><td>Docker</td></tr>
+    <tr><td><code>.github/workflows/</code></td><td>CI/CD pipeline</td><td>GitHub Actions</td></tr>
+    <tr><td><code>src/data/validate.py</code></td><td>Pandera schema definition</td><td>Pandera</td></tr>
+    <tr><td><code>src/tracking/experiment.py</code></td><td>MLflow experiment logging</td><td>MLflow</td></tr>
+    <tr><td><code>src/registry/versioning.py</code></td><td>MLflow Model Registry operations</td><td>MLflow</td></tr>
+    <tr><td><code>src/monitoring/drift.py</code></td><td>Evidently drift detection</td><td>Evidently</td></tr>
+    <tr><td><code>src/models/explain.py</code></td><td>SHAP global + per-customer explanations</td><td>SHAP</td></tr>
+    <tr><td><code>src/models/tuning.py</code></td><td>Bayesian hyperparameter search</td><td>Optuna</td></tr>
+    <tr><td><code>dvc.yaml</code></td><td>Reproducible pipeline stages (validate &rarr; features &rarr; train &rarr; drift)</td><td>DVC</td></tr>
+    <tr><td><code>tests/</code></td><td>29 tests: validation, features, training, evaluation, integration</td><td>pytest</td></tr>
+  </table>
+
+
+</main>
+</body>
+</html>
