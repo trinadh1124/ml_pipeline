@@ -65,3 +65,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     metrics = run_pipeline(monitor_batch=args.batch)
+# just to trigger the pileline using CI/CD
